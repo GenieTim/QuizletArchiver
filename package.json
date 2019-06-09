@@ -1,0 +1,10 @@
+{
+  "name": "QuizletArchiver",
+  "version": "1.0.0",
+  "description": "Tool to archive/backup Quizlet Folders",
+  "main": "index.js",
+  "repository": "https://github.com/BernhardWebstudio/QuizletArchiver",
+  "author": "Tim Bernhard",
+  "license": "GPLv3",
+  "private": false
+}
