@@ -9,4 +9,4 @@ Tool to archive/backup Quizlet Folders
 
 ## Usage
 
-Just run `./src/index.js`.
+Just run `./src/index.js` or `node ./src/index.js`.

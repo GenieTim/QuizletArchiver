@@ -1,4 +1,4 @@
-#!/bin/env node
+#!/usr/bin/env node
 // require modules
 const puppeteer = require('puppeteer');
 const fs = require('fs');
