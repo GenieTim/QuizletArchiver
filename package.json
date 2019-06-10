@@ -8,6 +8,8 @@
   "license": "GPLv3",
   "private": false,
   "dependencies": {
-    "puppeteer": "^1.17.0"
+    "node-fetch": "^2.6.0",
+    "puppeteer": "^1.17.0",
+    "sanitize-filename": "^1.6.1"
   }
 }

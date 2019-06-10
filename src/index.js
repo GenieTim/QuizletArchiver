@@ -2,14 +2,18 @@
 // require modules
 const puppeteer = require('puppeteer');
 const fs = require('fs');
+const fetch = require('node-fetch');
+const sanitizeFilename = require("sanitize-filename");
 
+// global variables. yes, bad, I know. Ich einfach unverbesserlich.
 const settings = JSON.parse(fs.readFileSync(__dirname + '/../settings.json'));
 var results = {};
 var debug = true;
+let browser;
 
 // start fetching folders
 (async () => {
-    const browser = await puppeteer.launch({
+    browser = await puppeteer.launch({
         headless: !debug,
         // slowMo: 250 // slow down by 250ms 
     });
@@ -80,8 +84,12 @@ async function handleFolder(page, folderLink, folderName) {
     });
 };
 
-
 async function handleSet(page, setLink, folderName, setName) {
+    await handleSetExport(page, setLink, folderName, setName);
+    await handleSetPrintout(page, setLink, folderName, setName);
+}
+
+async function handleSetExport(page, setLink, folderName, setName) {
     // got to set page
     const setOptionsSelector = ".SetPage-menuOption .UIIcon--more";
     const exportButtonIconSelector = ".UIIcon--export";
@@ -103,6 +111,39 @@ async function handleSet(page, setLink, folderName, setName) {
     const textValue = await exportTextarea.getProperty('value');
     const text = await textValue.jsonValue();
     results[folderName][setName] = text;
+}
+
+async function handleSetPrintout(page, setLink, folderName, setName) {
+    // we also want the printout as we would not have any images otherwise
+    const setOptionsSelector = ".SetPage-menuOption .UIIcon--more";
+    const printButtonIconSelector = ".UIIcon--print";
+    const [] = await Promise.all([
+        page.waitForNavigation(),
+        page.waitForSelector(setOptionsSelector),
+        page.goto(setLink)
+    ]);
+    const [] = await Promise.all([
+        page.waitForSelector(printButtonIconSelector),
+        page.hover(setOptionsSelector)
+    ]);
+    const radioButtonSelector = ".PrintPageOptions-radioWrap input[value='large']";
+    const submitButtonSelector = ".PrintPageOptions-openPdfButtonWrapper button"
+    const [] = await Promise.all([
+        page.waitForNavigation(),
+        page.waitForSelector(submitButtonSelector),
+        page.waitForSelector(radioButtonSelector),
+        page.click(printButtonIconSelector)
+    ]);
+    await page.click(radioButtonSelector);
+    const [] = await Promise.all([
+        new Promise(res => browser.on('targetcreated', res)),
+        page.click(submitButtonSelector)
+    ]);
+    const pages = await browser.pages(); // get all open pages by the browser
+    const popup = pages[pages.length - 1]; // the popup should be the last page opened
+    const pdfResponse = await fetch(popup.url());
+    fs.writeFileSync(__dirname + '/../export/' + sanitizeFilename('quizlet-' + folderName + '-' + setName + '.pdf'), pdfResponse.arrayBuffer(), 'binary');
+    await popup.close();
 }
 
 async function asyncForEach(array, callback) {

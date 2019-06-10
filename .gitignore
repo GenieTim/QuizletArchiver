@@ -62,3 +62,6 @@ typings/
 
 # settings
 settings.json
+
+# export
+export/*.pdf
