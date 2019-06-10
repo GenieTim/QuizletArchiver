@@ -2,9 +2,8 @@
 // require modules
 const puppeteer = require('puppeteer');
 const fs = require('fs');
-const fetch = require('node-fetch');
 const sanitizeFilename = require("sanitize-filename");
-
+const cloudscraper = require('cloudscraper');
 // global variables. yes, bad, I know. Ich einfach unverbesserlich.
 const settings = JSON.parse(fs.readFileSync(__dirname + '/../settings.json'));
 var results = {};
@@ -135,14 +134,23 @@ async function handleSetPrintout(page, setLink, folderName, setName) {
         page.click(printButtonIconSelector)
     ]);
     await page.click(radioButtonSelector);
+    // sleep half a second because of Quizlet's custom form submission taking 
+    // setup time
+    await sleep(500);
     const [] = await Promise.all([
         new Promise(res => browser.on('targetcreated', res)),
         page.click(submitButtonSelector)
     ]);
+    // get pdf URL
     const pages = await browser.pages(); // get all open pages by the browser
     const popup = pages[pages.length - 1]; // the popup should be the last page opened
-    const pdfResponse = await fetch(popup.url());
-    fs.writeFileSync(__dirname + '/../export/' + sanitizeFilename('quizlet-' + folderName + '-' + setName + '.pdf'), pdfResponse.arrayBuffer(), 'binary');
+    const pdfFilepath = __dirname + '/../export/' + sanitizeFilename('quizlet-' + folderName + '-' + setName + '.pdf');
+
+    // catch cloudflare captcha
+    cloudscraper.get(popup.url()).on('error', (err) => {
+        console.error(err);
+    }).pipe(fs.createWriteStream(pdfFilepath));
+    
     await popup.close();
 }
 
@@ -150,4 +158,10 @@ async function asyncForEach(array, callback) {
     for (let index = 0; index < array.length; index++) {
         await callback(array[index], index, array);
     }
+}
+
+function sleep(ms) {
+    return new Promise(resolve => {
+        setTimeout(resolve, ms)
+    })
 }
