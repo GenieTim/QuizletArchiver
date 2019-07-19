@@ -65,5 +65,5 @@ settings.json
 
 # export
 export/*.pdf
-
+export*
 export/export.json

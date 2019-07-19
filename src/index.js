@@ -54,7 +54,12 @@ let browser;
 
     // process all folders
     await asyncForEach(folderLinks, async (folderLink, index) => {
-        await handleFolder(page, folderLink, folderNames[index]);
+        try {
+            await handleFolder(page, folderLink, folderNames[index]);
+        } catch (error) {
+            console.log("Failed to handle set: '" + folderNames[index] + "'. Waiting a few seconds...", error);
+            await sleep(3751);
+        }
     });
     // output results
     console.log(results);
@@ -63,7 +68,7 @@ let browser;
 })();
 
 async function handleFolder(page, folderLink, folderName) {
-    const setSelector = ".FolderPageSetsView .DashboardListItem";
+    const setSelector = ".FolderPageSetsView .UISetCard";
     // go to folder page
     const [] = await Promise.all([
         page.waitForNavigation(),
@@ -73,13 +78,18 @@ async function handleFolder(page, folderLink, folderName) {
     results[folderName] = {};
     // find all sets in this folder
     // resp. their properties
-    const setNames = await page.$$eval(setSelector + " header.SetPreview-cardHeader", (headers) => headers.map(header => header.innerText));
+    const setNames = await page.$$eval(setSelector + " .UIBaseCardHeader h4.UIHeading", (headers) => headers.map(header => header.innerText));
     const setLinks = await page.$$eval(setSelector + " .UILinkBox-link a", (links) => links.map(link => link.href));
 
     console.log("Found " + setNames.length + " sets in Folder '" + folderName + "'...");
     // process all sets
     await asyncForEach(setLinks, async (setLink, index) => {
-        await handleSet(page, setLink, folderName, setNames[index]);
+        try {
+            await handleSet(page, setLink, folderName, setNames[index]);
+        } catch (e) {
+            console.error("Failed to handle set: '" + setNames[index] + "'. Waiting a few seconds...", e);
+            await sleep(1996);
+        }
     });
 };
 
@@ -150,7 +160,7 @@ async function handleSetPrintout(page, setLink, folderName, setName) {
     cloudscraper.get(popup.url()).on('error', (err) => {
         console.error(err);
     }).pipe(fs.createWriteStream(pdfFilepath));
-    
+
     await popup.close();
 }
 
