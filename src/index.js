@@ -62,7 +62,7 @@ let browser;
         }
     });
     // output results
-    console.log(results);
+    console.log(JSON.stringify(results));
 
     await browser.close();
 })();
