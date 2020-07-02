@@ -66,6 +66,7 @@ let browser;
     });
     // output results
     console.log(JSON.stringify(results));
+    fs.writeFileSync(__dirname + "/../export/export-all.json", JSON.stringify(results), { encoding: 'utf8' })
 
     await browser.close();
 })();
