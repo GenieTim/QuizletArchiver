@@ -23,7 +23,10 @@ let browser;
     await page.goto('https://quizlet.com/latest');
     // login if necessary
     if (page.url() !== 'https://quizlet.com/latest') {
-        const signInButton = await page.$(".SiteHeader-signIn .SiteHeader-signInBtn");
+        let signInButton = await page.$(".SiteHeader-signIn .SiteHeader-signInBtn");
+        if (!signInButton) {
+            signInButton = await page.$(".SiteHeader-userSection .SignInAllButtons-signInBtn")
+        }
         const [] = await Promise.all([
             page.waitForSelector("form.LoginPromptModal-form input[name='username']"),
             page.waitForSelector("form.LoginPromptModal-form input[name='password']"),
@@ -79,9 +82,14 @@ async function handleFolder(page, folderLink, folderName) {
     // find all sets in this folder
     // resp. their properties
     const setNames = await page.$$eval(setSelector + " .UIBaseCardHeader h4.UIHeading", (headers) => headers.map(header => header.innerText));
-    const setLinks = await page.$$eval(setSelector + " .UILinkBox-link a", (links) => links.map(link => link.href));
+    let setLinks = await page.$$eval(setSelector + " .UIBaseCardHeader a.UILink", (links) => links.map(link => link.href));
 
     console.log("Found " + setNames.length + " sets in Folder '" + folderName + "'...");
+
+    if (setLinks.length !== setNames.length) {
+        console.warn("Did not find the same number of sets & links to sets")
+    }
+
     // process all sets
     await asyncForEach(setLinks, async (setLink, index) => {
         try {
