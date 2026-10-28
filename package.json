@@ -10,7 +10,7 @@
   "dependencies": {
     "brotli": "^2.1.0",
     "cloudscraper": "^4.6.0",
-    "puppeteer": "^25.14.0",
+    "puppeteer": "^25.16.0",
     "request": "^2.88.2",
     "sanitize-filename": "^1.6.4"
   }
